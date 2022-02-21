@@ -1,0 +1,3 @@
+name: ShuffleLadder
+version: '${version}'
+main: org.aussieanarchy.shuffleladder.ShuffleLadder
