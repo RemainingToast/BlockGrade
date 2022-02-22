@@ -36,7 +36,9 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     public BukkitScheduler scheduler = getServer().getScheduler();
     public List<Player> spectators = Lists.newArrayList();
 
+
     public BossBar bar;
+    public int schedulerId;
     public long timeStarted;
 
     @Override
@@ -77,6 +79,8 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         if (bar != null) {
             bar = null;
         }
+
+        scheduler.cancelTask(schedulerId);
     }
 
     private void startGame() {
@@ -88,7 +92,7 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         // Inventory Generator
         AtomicInteger count = new AtomicInteger(0);
 
-        scheduler.scheduleSyncRepeatingTask(this, () -> {
+        schedulerId = scheduler.scheduleSyncRepeatingTask(this, () -> {
             int i = count.incrementAndGet();
 
             bar.setProgress(i / 300f);
@@ -110,8 +114,8 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         // duration 5 minutes
         gracePeriod(6000L);
 
-//        setupItemGenerator(BEACON, 10L);
-//        setupItemGenerator(ENCHANTMENT_TABLE, 100L);
+        setupItemGenerator(BEACON, 50L);
+        setupItemGenerator(ENCHANTMENT_TABLE, 100L);
     }
 
     private void handleVictory(Player victor) {
@@ -255,7 +259,6 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     }
 
     public void gracePeriod(Long time) {
-
         AtomicInteger minutes = new AtomicInteger(Math.toIntExact(time) / 20 / 60);
 
         scheduler.scheduleSyncRepeatingTask(this, () -> {
@@ -272,7 +275,7 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     }
 
     private void setupItemGenerator(Material generator, Long time) {
-        scheduler.scheduleSyncRepeatingTask(this, () -> {
+        scheduler.runTaskTimerAsynchronously(this, () -> {
             for (World w : getServer().getWorlds()) {
                 if (w.getEnvironment() != World.Environment.NORMAL) continue;
 
@@ -287,8 +290,10 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
                                 Location l = b.getLocation().add(0, 1, 0);
 
                                 if (b.getType() == generator) {
-                                    w.dropItemNaturally(l, DIRT);
-                                    w.spawnParticle(Particle.CRIT, l, 5);
+                                    scheduler.scheduleSyncDelayedTask(this, () -> {
+                                        w.dropItemNaturally(l, DIRT);
+                                        w.spawnParticle(Particle.CRIT, l, 5);
+                                    });
                                 }
                             }
                         }
