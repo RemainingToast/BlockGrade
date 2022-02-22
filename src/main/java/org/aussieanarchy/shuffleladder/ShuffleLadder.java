@@ -44,9 +44,6 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-
-        timeStarted = System.currentTimeMillis();
-
         setMaterialsInLadder();
 
         getServer().getPluginManager().registerEvents(this, this);
@@ -79,6 +76,8 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     }
 
     private void startGame() {
+        timeStarted = System.currentTimeMillis();
+
         AtomicInteger count = new AtomicInteger(0);
 
         // Inventory Generator
