@@ -3,7 +3,6 @@ package org.aussieanarchy.shuffleladder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -15,13 +14,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.Potion;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.ArrayList;
@@ -246,9 +241,22 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
     public void gracePeriod(Long time) {
 
-        scheduler.scheduleSyncDelayedTask(this, () -> {
-            getServer().broadcastMessage(ChatColor.GOLD + "Grace period ended.");
-        }, time);
+        AtomicInteger graceTime = new AtomicInteger(Math.toIntExact(time));
+        AtomicInteger minutes = new AtomicInteger(graceTime.get() / 20 / 60);
+
+        scheduler.scheduleSyncRepeatingTask(this, () -> {
+
+            if(graceTime.get() % 1200 == 0) {
+                minutes.addAndGet(1);
+                if(minutes.get() == 0) {
+                    getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] Ended, pvp is enabled.");
+                    minutes.set(-1);
+                }
+                getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] " + minutes + " minutes remaining.");
+            }
+            graceTime.addAndGet(-1);
+
+        }, 0L, time);
     }
 
     private void setupItemGenerator(Material generator, Long time) {
