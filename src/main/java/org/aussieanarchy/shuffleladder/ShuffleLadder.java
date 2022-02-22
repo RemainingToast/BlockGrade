@@ -256,25 +256,17 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
     public void gracePeriod(Long time) {
 
-        AtomicInteger graceTime = new AtomicInteger(Math.toIntExact(time));
-        AtomicInteger minutes = new AtomicInteger(graceTime.get() / 20 / 60);
+        AtomicInteger minutes = new AtomicInteger(Math.toIntExact(time) / 20 / 60);
 
         scheduler.scheduleSyncRepeatingTask(this, () -> {
 
-            if(graceTime.get() % 1200 == 0) {
-                if(minutes.get() == 0) {
-                    getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] Ended, pvp is enabled.");
-                    minutes.set(-1);
-                } else {
-                    getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] " + minutes + " minutes remaining.");
-                }
-
+            if(minutes.get() == 0) {
+                getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] Ended, pvp is enabled.");
+                minutes.set(-1);
+            } else if (minutes.get() != -1) {
+                getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] " + minutes + " minutes remaining.");
                 minutes.getAndDecrement();
             }
-
-            graceTime.getAndAdd(-300);
-
-//            graceTime.getAndDecrement();
 
         }, 0L, 300L);
     }
