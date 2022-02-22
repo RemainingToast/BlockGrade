@@ -16,6 +16,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -33,16 +34,16 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     public HashMap<Material, Material> materials = Maps.newHashMap();
     public ItemStack DIRT = new ItemStack(Material.DIRT);
     public BukkitScheduler scheduler = getServer().getScheduler();
-    public BossBar bar = Bukkit.createBossBar("1x Dirt", BarColor.GREEN, BarStyle.SEGMENTED_20);
     public List<Player> spectators = Lists.newArrayList();
 
+    public BossBar bar;
     public long timeStarted;
 
     @Override
     public void onEnable() {
-        setMaterialsInLadder();
-
         getServer().getPluginManager().registerEvents(this, this);
+
+        setMaterialsInLadder();
 
         startGame();
     }
@@ -53,10 +54,12 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void on(EntityDamageEvent e) {
-        Player player = (Player) e.getEntity();
-        if(player != null && player.getHealth() == 0) {
+    public void on(PlayerDeathEvent e) {
+        Player player = e.getEntity().getPlayer();
+
+        if(player != null) {
             spectators.add(player);
+
             player.setGameMode(GameMode.SPECTATOR);
             player.getInventory().clear();
 
@@ -70,15 +73,21 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
     private void endGame() {
         bar.removeAll();
-        bar = null;
+
+        if (bar != null) {
+            bar = null;
+        }
     }
 
     private void startGame() {
         timeStarted = System.currentTimeMillis();
 
-        AtomicInteger count = new AtomicInteger(0);
+        // Bossbar
+        bar = Bukkit.createBossBar("1x Dirt", BarColor.GREEN, BarStyle.SEGMENTED_20);
 
         // Inventory Generator
+        AtomicInteger count = new AtomicInteger(0);
+
         scheduler.scheduleSyncRepeatingTask(this, () -> {
             int i = count.incrementAndGet();
 
@@ -108,6 +117,10 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     private void handleVictory(Player victor) {
         getServer().broadcastMessage(ChatColor.GOLD + victor.getDisplayName() + " won! Resetting Arena!");
 
+        victor.getInventory().clear();
+        victor.setHealth(victor.getMaxHealth());
+        victor.setFoodLevel(20);
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             spectators.remove(p);
 
@@ -129,10 +142,6 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         for (Entity e : victor.getWorld().getEntities()) {
             if (!(e instanceof Player)) e.remove();
         }
-
-        victor.getInventory().clear();
-        victor.setHealth(victor.getMaxHealth());
-        victor.setFoodLevel(20);
 
         endGame();
 
@@ -253,18 +262,21 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         scheduler.scheduleSyncRepeatingTask(this, () -> {
 
             if(graceTime.get() % 1200 == 0) {
-                minutes.getAndDecrement();
-
                 if(minutes.get() == 0) {
                     getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] Ended, pvp is enabled.");
                     minutes.set(-1);
+                } else {
+                    getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] " + minutes + " minutes remaining.");
                 }
-                getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] " + minutes + " minutes remaining.");
+
+                minutes.getAndDecrement();
             }
 
-            graceTime.getAndDecrement();
+            graceTime.getAndAdd(-300);
 
-        }, 0L, time);
+//            graceTime.getAndDecrement();
+
+        }, 0L, 300L);
     }
 
     private void setupItemGenerator(Material generator, Long time) {
