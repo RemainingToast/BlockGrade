@@ -17,6 +17,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.ArrayList;
@@ -43,6 +46,11 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
         AtomicInteger count = new AtomicInteger(0);
 
+        // duration 5 minutes
+        for(Player p : getServer().getOnlinePlayers()) {
+            p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 300, 60));
+        }
+
         // Inventory Generator
         scheduler.scheduleSyncRepeatingTask(this, () -> {
             int i = count.incrementAndGet();
@@ -62,6 +70,8 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
                 count.set(0);
             }
         }, 0L, 1L);
+
+        gracePeriod(6000L);
 
 //        setupItemGenerator(BEACON, 10L);
 //        setupItemGenerator(ENCHANTMENT_TABLE, 100L);
@@ -213,6 +223,19 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
             w.dropItemNaturally(b.getLocation().add(0, 1, 0), new ItemStack(materials.get(b.getType())));
         }
+    }
+
+    public void gracePeriod(Long time) {
+        scheduler.scheduleSyncRepeatingTask(this, () -> {
+            AtomicInteger count = new AtomicInteger(0);
+
+            int i = count.incrementAndGet();
+
+            if (i >= time) {
+                getServer().broadcastMessage(ChatColor.GOLD + "Grace period ended.");
+            }
+
+        }, 0L, 1L);
     }
 
     private void setupItemGenerator(Material generator, Long time) {
