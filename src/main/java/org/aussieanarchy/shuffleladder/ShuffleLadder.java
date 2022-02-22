@@ -53,8 +53,7 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        bar.removeAll();
-        bar = null;
+        endGame();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -73,6 +72,11 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
                 }
             }
         }
+    }
+
+    private void endGame() {
+        bar.removeAll();
+        bar = null;
     }
 
     private void startGame() {
@@ -136,7 +140,11 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         victor.setHealth(victor.getMaxHealth());
         victor.setFoodLevel(20);
 
+        endGame();
+
         scatter(victor.getWorld());
+
+        startGame();
     }
 
     public void scatter(World world) {
@@ -149,7 +157,7 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
             int x = r.nextInt(max - min) + min;
             int z = r.nextInt(max - min) + min;
             int y = world.getHighestBlockYAt(x, z);
-            Location location = new Location(p.getWorld(), x, y, z);
+            Location location = new Location(world, x, y, z);
             p.teleport(location);
         }
     }
