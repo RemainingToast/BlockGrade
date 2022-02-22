@@ -268,7 +268,7 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
                 minutes.getAndDecrement();
             }
 
-        }, 0L, 300L);
+        }, 0L, 1200L);
     }
 
     private void setupItemGenerator(Material generator, Long time) {
