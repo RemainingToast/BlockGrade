@@ -45,19 +45,21 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
         // Inventory Generator
         scheduler.scheduleSyncRepeatingTask(this, () -> {
-            for (Player p : getServer().getOnlinePlayers()) {
-                int i = count.incrementAndGet();
+            int i = count.incrementAndGet();
 
+            bar.setProgress(i / 300f);
+
+            for (Player p : getServer().getOnlinePlayers()) {
                 bar.addPlayer(p);
-                bar.setProgress(i / 300f);
 
                 if (i >= 300) {
-                    bar.setProgress(1);
-
                     p.getInventory().addItem(DIRT);
-
-                    count.set(0);
                 }
+            }
+
+            if (i >= 300) {
+                bar.setProgress(1);
+                count.set(0);
             }
         }, 0L, 1L);
 
