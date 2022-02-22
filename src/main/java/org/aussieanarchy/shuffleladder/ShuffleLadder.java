@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,8 +39,13 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     public BossBar bar = Bukkit.createBossBar("1x Dirt", BarColor.GREEN, BarStyle.SEGMENTED_20);
     public List<Player> spectators = Lists.newArrayList();
 
+    public long timeStarted;
+
     @Override
     public void onEnable() {
+
+        timeStarted = System.currentTimeMillis();
+
         setMaterialsInLadder();
 
         getServer().getPluginManager().registerEvents(this, this);
@@ -226,10 +232,20 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         }
     }
 
-    public void gracePeriod(Long time) {
-        for(Player p : getServer().getOnlinePlayers()) {
-            p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Math.toIntExact(time), 60));
+    @EventHandler
+    public void on(EntityDamageEvent e) {
+
+        long currentTime = System.currentTimeMillis();
+        long timePassed = currentTime - timeStarted;
+
+        if(e.getEntity() instanceof Player && timePassed < 300000) {
+            e.setCancelled(true);
         }
+
+        scheduler.scheduleSyncRepeatingTask(this, () -> e.setCancelled(true), 0L, 6000L);
+    }
+
+    public void gracePeriod(Long time) {
 
         scheduler.scheduleSyncDelayedTask(this, () -> {
             getServer().broadcastMessage(ChatColor.GOLD + "Grace period ended.");
