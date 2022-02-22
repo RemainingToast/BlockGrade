@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
@@ -233,16 +234,14 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void on(EntityDamageEvent e) {
+    public void on(EntityDamageByEntityEvent e) {
 
         long currentTime = System.currentTimeMillis();
         long timePassed = currentTime - timeStarted;
 
-        if(e.getEntity() instanceof Player && timePassed < 300000) {
+        if(e.getEntity() instanceof Player && timePassed < 300000 && e.getDamager() instanceof Player) {
             e.setCancelled(true);
         }
-
-        scheduler.scheduleSyncRepeatingTask(this, () -> e.setCancelled(true), 0L, 6000L);
     }
 
     public void gracePeriod(Long time) {
