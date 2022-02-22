@@ -14,6 +14,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -52,12 +53,10 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void on(PlayerDeathEvent e) {
-        Player player = e.getEntity().getPlayer();
-
-        if (player != null) {
+    public void on(EntityDamageEvent e) {
+        Player player = (Player) e.getEntity();
+        if(player != null && player.getHealth() == 0) {
             spectators.add(player);
-
             player.setGameMode(GameMode.SPECTATOR);
             player.getInventory().clear();
 
