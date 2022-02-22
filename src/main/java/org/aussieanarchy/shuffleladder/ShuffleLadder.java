@@ -44,37 +44,7 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
 
         getServer().getPluginManager().registerEvents(this, this);
 
-        AtomicInteger count = new AtomicInteger(0);
-
-        // duration 5 minutes
-        for(Player p : getServer().getOnlinePlayers()) {
-            p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 300, 60));
-        }
-
-        // Inventory Generator
-        scheduler.scheduleSyncRepeatingTask(this, () -> {
-            int i = count.incrementAndGet();
-
-            bar.setProgress(i / 300f);
-
-            for (Player p : getServer().getOnlinePlayers()) {
-                bar.addPlayer(p);
-
-                if (i >= 300) {
-                    p.getInventory().addItem(DIRT);
-                }
-            }
-
-            if (i >= 300) {
-                bar.setProgress(1);
-                count.set(0);
-            }
-        }, 0L, 1L);
-
-        gracePeriod(6000L);
-
-//        setupItemGenerator(BEACON, 10L);
-//        setupItemGenerator(ENCHANTMENT_TABLE, 100L);
+        startGame();
     }
 
     @Override
@@ -99,6 +69,36 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
                 }
             }
         }
+    }
+
+    private void startGame() {
+        AtomicInteger count = new AtomicInteger(0);
+
+        // Inventory Generator
+        scheduler.scheduleSyncRepeatingTask(this, () -> {
+            int i = count.incrementAndGet();
+
+            bar.setProgress(i / 300f);
+
+            for (Player p : getServer().getOnlinePlayers()) {
+                bar.addPlayer(p);
+
+                if (i >= 300) {
+                    p.getInventory().addItem(DIRT);
+                }
+            }
+
+            if (i >= 300) {
+                bar.setProgress(1);
+                count.set(0);
+            }
+        }, 0L, 1L);
+
+        // duration 5 minutes
+        gracePeriod(6000L);
+
+//        setupItemGenerator(BEACON, 10L);
+//        setupItemGenerator(ENCHANTMENT_TABLE, 100L);
     }
 
     private void handleVictory(Player victor) {
@@ -126,6 +126,7 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
             if (!(e instanceof Player)) e.remove();
         }
 
+        victor.getInventory().clear();
         victor.setHealth(victor.getMaxHealth());
         victor.setFoodLevel(20);
 
@@ -226,22 +227,18 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
     }
 
     public void gracePeriod(Long time) {
-        scheduler.scheduleSyncRepeatingTask(this, () -> {
-            AtomicInteger count = new AtomicInteger(0);
+        for(Player p : getServer().getOnlinePlayers()) {
+            p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Math.toIntExact(time), 60));
+        }
 
-            int i = count.incrementAndGet();
-
-            if (i >= time) {
-                getServer().broadcastMessage(ChatColor.GOLD + "Grace period ended.");
-            }
-
-        }, 0L, 1L);
+        scheduler.scheduleSyncDelayedTask(this, () -> {
+            getServer().broadcastMessage(ChatColor.GOLD + "Grace period ended.");
+        }, time);
     }
 
     private void setupItemGenerator(Material generator, Long time) {
         scheduler.scheduleSyncRepeatingTask(this, () -> {
             for (World w : getServer().getWorlds()) {
-
                 if (w.getEnvironment() != World.Environment.NORMAL) continue;
 
                 for (Chunk c : w.getLoadedChunks()) {
