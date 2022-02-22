@@ -254,14 +254,16 @@ public final class ShuffleLadder extends JavaPlugin implements Listener {
         scheduler.scheduleSyncRepeatingTask(this, () -> {
 
             if(graceTime.get() % 1200 == 0) {
-                minutes.addAndGet(1);
+                minutes.getAndDecrement();
+
                 if(minutes.get() == 0) {
                     getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] Ended, pvp is enabled.");
                     minutes.set(-1);
                 }
                 getServer().broadcastMessage(ChatColor.GOLD + "[Grace Period] " + minutes + " minutes remaining.");
             }
-            graceTime.addAndGet(-1);
+
+            graceTime.getAndDecrement();
 
         }, 0L, time);
     }
